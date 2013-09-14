@@ -69,7 +69,7 @@ meat = [
 	'turducken',
 	'doner',
 	'kevin'
-	]
+]
 
 app.get '/ipsum', (req, res) ->
 	body = ipsum
