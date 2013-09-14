@@ -1,5 +1,6 @@
 express = require 'express'
 _ = require 'underscore'
+im = require 'imagemagick'
 app = express()
 
 ipsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum ipsum a lobortis accumsan. Maecenas eleifend tempor tempus. Duis id tellus id metus ullamcorper mollis. Quisque eget tortor porta, laoreet augue et, ultrices nunc. Phasellus lectus massa, vehicula vitae eleifend viverra, volutpat sit amet dolor. Quisque massa leo, vehicula in purus vitae, auctor iaculis nibh. Fusce eget laoreet erat. Donec nibh purus, ultricies a lacus eget, viverra aliquet nulla. Cras dapibus cursus lectus, nec aliquam urna accumsan quis. Donec molestie hendrerit tristique. Aenean feugiat lacus lectus, lobortis consectetur purus gravida quis.
@@ -71,20 +72,74 @@ meat = [
 	'kevin'
 ]
 
+pickImage = ->
+	Math.floor (Math.random()*16) + 1
+
+sendFile = (image, res) ->
+	res.contentType = 'image/jpeg';
+	res.sendfile image
+
+makeBW = (num, res) ->
+	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	imageBW = "/tmp/" + num + "-BW.jpeg"
+
+	im.convert [image, '-monochrome', imageBW],
+	(err, stdout)->
+		sendFile imageBW, res
+
+resize = (num, width, height, res) ->
+	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
+
+	im.resize {
+		srcPath: image
+		dstPath: imageSmall
+		width: width
+		height: height
+	},(err, stdout) ->
+		sendFile imageSmall, res
+
+resizeAndMore = (num, width, height, res) ->
+	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
+
+	im.resize {
+		srcPath: image
+		dstPath: imageSmall
+		width: width
+		height: height
+	},(err, stdout) ->
+		imageBW = "/tmp/" + num + "-" + width + "-" + height + "-BW.jpeg"
+		im.convert [imageSmall, '-monochrome', imageBW],
+		(err, stdout)->
+			sendFile imageBW, res
+
+app.get '/cats', (req, res) ->
+	sendFile __dirname + "/public/cats/" + pickImage() + ".jpeg", res
+
+app.get '/cats/bw', (req, res) ->
+	makeBW pickImage(), res
+
+app.get '/cats/:width/:height', (req, res) ->
+	resize pickImage(), req.params.width, req.params.height, res
+
+app.get '/cats/:width/:height/bw', (req, res) ->
+	resizeAndMore pickImage(), req.params.width, req.params.height, res
+
 app.get '/ipsum', (req, res) ->
 	body = ipsum
 	res.setHeader 'Content-Type', 'text/plain'
 	res.setHeader 'Content-Length', body.length
 	res.end body
 
-
 app.get '/bacon', (req, res) ->
-	num = Math.floor (Math.random()*10)+3
 	words = ipsum.split " "
 	baconIpsum = ""
 
 	_.each words, (word, x) ->
-		word = meat.shift() if x % num == 0
+		wordPos = Math.floor (Math.random()*5)+2
+		arrayPos = (Math.floor (Math.random()*meat.length)+1)-1
+		word = meat[arrayPos] if x % wordPos == 0
 		baconIpsum += word + " "
 
 	body = baconIpsum
