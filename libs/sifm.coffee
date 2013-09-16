@@ -2,8 +2,9 @@ fs = require 'fs'
 express = require 'express'
 request = require 'request'
 _ = require 'underscore'
-im = require 'imagemagick'
 gm = require 'gm'
+uuid = require 'node-uuid'
+
 app = express()
 
 ipsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum ipsum a lobortis accumsan. Maecenas eleifend tempor tempus. Duis id tellus id metus ullamcorper mollis. Quisque eget tortor porta, laoreet augue et, ultrices nunc. Phasellus lectus massa, vehicula vitae eleifend viverra, volutpat sit amet dolor. Quisque massa leo, vehicula in purus vitae, auctor iaculis nibh. Fusce eget laoreet erat. Donec nibh purus, ultricies a lacus eget, viverra aliquet nulla. Cras dapibus cursus lectus, nec aliquam urna accumsan quis. Donec molestie hendrerit tristique. Aenean feugiat lacus lectus, lobortis consectetur purus gravida quis.
@@ -78,91 +79,64 @@ meat = [
 pickImage = ->
 	Math.floor (Math.random()*16) + 1
 
-makeBW = (num, res) ->
-	res.contentType = 'image/jpeg';
-	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
-	imageBW = "/tmp/" + num + "-BW.jpeg"
-
-	im.convert [image, '-monochrome', imageBW],
-	(err, stdout)->
-		res.sendfile imageBW
-
-resize = (num, width, height, res) ->
-	res.contentType = 'image/jpeg';
-	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
-	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
-
-	request(image).pipe (
-		ws = fs.createWriteStream(num + ".jpeg")
-	)
-
-	#image = request.get image
-
-	#image.pipe( res.sendfile() )
-
-	#out = fs.createWriteStream(imageSmall).pipe(request.put(image))
-
-	#gm(imageName).resize(width, height).stream().pipe()
-
-	###im.resize {
-		srcPath: image
-		dstPath: imageSmall
-		width: width
-		height: height
-	},(err, stdout) ->
-		res.sendfile imageSmall###
-
-resizeAndMore = (num, width, height, res) ->
-	res.contentType = 'image/jpeg';
-	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
-	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
-
-	im.resize {
-		srcPath: image
-		dstPath: imageSmall
-		width: width
-		height: height
-	},(err, stdout) ->
-		imageBW = "/tmp/" + num + "-" + width + "-" + height + "-BW.jpeg"
-		im.convert [imageSmall, '-monochrome', imageBW],
-		(err, stdout)->
-			res.sendfile imageBW
-
 app.get '/cats', (req, res) ->
 	res.contentType = 'image/jpeg';
 	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + pickImage() + ".jpeg"
 	request(image).pipe(res)
 
 app.get '/cats/bw', (req, res) ->
-	makeBW pickImage(), res
-
-app.get '/cats/:width/:height', (req, res) ->
-	#resize pickImage(), req.params.width, req.params.height, res
-	num = pickImage()
 	res.contentType = 'image/jpeg';
+
+	num = pickImage()
 	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
-	#imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
+	local = "/tmp/" + uuid.v1() + ".jpeg"
 
 	request( image, (err, resp, body) ->
-		###rs = fs.createReadStream num + ".jpeg"
-		rs.on 'open', () ->
-			#rs.pipe res
-			#.resize(req.params.width, req.params.height)
+		rs = fs.createReadStream local
 
-			gm(rs, num + ".jpeg").write(num + "-s.jpeg", (err) ->
-				console.log err if err
-				rs.pipe res if !err
-			)###
-		gm("/Users/jhann/Node/Say-It-For-Me/" + num + ".jpeg").size((err, size) ->
+		gm(rs, num + ".jpeg").type("Grayscale").write(local, (err) ->
 			console.log err if err
-			console.log size.width
+			res.sendfile local
 		)
 	).pipe (
-		fs.createWriteStream num + ".jpeg"
+		fs.createWriteStream local
+	)
+
+app.get '/cats/:width/:height', (req, res) ->
+	res.contentType = 'image/jpeg';
+
+	num = pickImage()
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	local = "/tmp/" + uuid.v1() + ".jpeg"
+
+	request( image, (err, resp, body) ->
+		rs = fs.createReadStream local
+
+		gm(rs, num + ".jpeg").resize(req.params.width, req.params.height).write(local, (err) ->
+			console.log err if err
+			res.sendfile local
+		)
+	).pipe (
+		fs.createWriteStream local
 	)
 
 app.get '/cats/:width/:height/bw', (req, res) ->
-	resizeAndMore pickImage(), req.params.width, req.params.height, res
+	res.contentType = 'image/jpeg';
+
+	num = pickImage()
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	local = "/tmp/" + uuid.v1() + ".jpeg"
+
+	request( image, (err, resp, body) ->
+		rs = fs.createReadStream local
+
+		gm(rs, num + ".jpeg").resize(req.params.width, req.params.height).type("Grayscale").write(local, (err) ->
+			console.log err if err
+			res.sendfile local
+		)
+	).pipe (
+		fs.createWriteStream local
+	)
 
 app.get '/ipsum', (req, res) ->
 	body = ipsum
