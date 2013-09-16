@@ -1,4 +1,6 @@
+fs = require 'fs'
 express = require 'express'
+request = require 'request'
 _ = require 'underscore'
 im = require 'imagemagick'
 app = express()
@@ -75,20 +77,18 @@ meat = [
 pickImage = ->
 	Math.floor (Math.random()*16) + 1
 
-sendFile = (image, res) ->
-	res.contentType = 'image/jpeg';
-	res.sendfile image
-
 makeBW = (num, res) ->
-	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	res.contentType = 'image/jpeg';
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
 	imageBW = "/tmp/" + num + "-BW.jpeg"
 
 	im.convert [image, '-monochrome', imageBW],
 	(err, stdout)->
-		sendFile imageBW, res
+		res.sendfile imageBW
 
 resize = (num, width, height, res) ->
-	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	res.contentType = 'image/jpeg';
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
 	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
 
 	im.resize {
@@ -97,10 +97,11 @@ resize = (num, width, height, res) ->
 		width: width
 		height: height
 	},(err, stdout) ->
-		sendFile imageSmall, res
+		res.sendfile imageSmall
 
 resizeAndMore = (num, width, height, res) ->
-	image = "https://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	res.contentType = 'image/jpeg';
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
 	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
 
 	im.resize {
@@ -112,10 +113,13 @@ resizeAndMore = (num, width, height, res) ->
 		imageBW = "/tmp/" + num + "-" + width + "-" + height + "-BW.jpeg"
 		im.convert [imageSmall, '-monochrome', imageBW],
 		(err, stdout)->
-			sendFile imageBW, res
+			res.sendfile imageBW
 
 app.get '/cats', (req, res) ->
-	sendFile __dirname + "/public/cats/" + pickImage() + ".jpeg", res
+	res.contentType = 'image/jpeg';
+	catFile = pickImage() + ".jpeg"
+	cat = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + catFile
+	request(cat).pipe(res)
 
 app.get '/cats/bw', (req, res) ->
 	makeBW pickImage(), res
