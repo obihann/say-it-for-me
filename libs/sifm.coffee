@@ -143,14 +143,20 @@ app.get '/cats/:width/:height', (req, res) ->
 	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
 	#imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
 
-	request(
-		image, (err, resp, body) ->
-			rs = fs.createReadStream num + ".jpeg"
+	request( image, (err, resp, body) ->
+		###rs = fs.createReadStream num + ".jpeg"
+		rs.on 'open', () ->
+			#rs.pipe res
 			#.resize(req.params.width, req.params.height)
 
 			gm(rs, num + ".jpeg").write(num + "-s.jpeg", (err) ->
-				console.log err
-			)
+				console.log err if err
+				rs.pipe res if !err
+			)###
+		gm("/Users/jhann/Node/Say-It-For-Me/" + num + ".jpeg").size((err, size) ->
+			console.log err if err
+			console.log size.width
+		)
 	).pipe (
 		fs.createWriteStream num + ".jpeg"
 	)
