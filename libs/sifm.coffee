@@ -3,6 +3,7 @@ express = require 'express'
 request = require 'request'
 _ = require 'underscore'
 im = require 'imagemagick'
+gm = require 'gm'
 app = express()
 
 ipsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum ipsum a lobortis accumsan. Maecenas eleifend tempor tempus. Duis id tellus id metus ullamcorper mollis. Quisque eget tortor porta, laoreet augue et, ultrices nunc. Phasellus lectus massa, vehicula vitae eleifend viverra, volutpat sit amet dolor. Quisque massa leo, vehicula in purus vitae, auctor iaculis nibh. Fusce eget laoreet erat. Donec nibh purus, ultricies a lacus eget, viverra aliquet nulla. Cras dapibus cursus lectus, nec aliquam urna accumsan quis. Donec molestie hendrerit tristique. Aenean feugiat lacus lectus, lobortis consectetur purus gravida quis.
@@ -91,13 +92,25 @@ resize = (num, width, height, res) ->
 	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
 	imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
 
-	im.resize {
+	request(image).pipe (
+		ws = fs.createWriteStream(num + ".jpeg")
+	)
+
+	#image = request.get image
+
+	#image.pipe( res.sendfile() )
+
+	#out = fs.createWriteStream(imageSmall).pipe(request.put(image))
+
+	#gm(imageName).resize(width, height).stream().pipe()
+
+	###im.resize {
 		srcPath: image
 		dstPath: imageSmall
 		width: width
 		height: height
 	},(err, stdout) ->
-		res.sendfile imageSmall
+		res.sendfile imageSmall###
 
 resizeAndMore = (num, width, height, res) ->
 	res.contentType = 'image/jpeg';
@@ -117,15 +130,30 @@ resizeAndMore = (num, width, height, res) ->
 
 app.get '/cats', (req, res) ->
 	res.contentType = 'image/jpeg';
-	catFile = pickImage() + ".jpeg"
-	cat = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + catFile
-	request(cat).pipe(res)
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + pickImage() + ".jpeg"
+	request(image).pipe(res)
 
 app.get '/cats/bw', (req, res) ->
 	makeBW pickImage(), res
 
 app.get '/cats/:width/:height', (req, res) ->
-	resize pickImage(), req.params.width, req.params.height, res
+	#resize pickImage(), req.params.width, req.params.height, res
+	num = pickImage()
+	res.contentType = 'image/jpeg';
+	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + num + ".jpeg"
+	#imageSmall = "/tmp/" + num + "-" + width + "-" + height + ".jpeg"
+
+	request(
+		image, (err, resp, body) ->
+			rs = fs.createReadStream num + ".jpeg"
+			#.resize(req.params.width, req.params.height)
+
+			gm(rs, num + ".jpeg").write(num + "-s.jpeg", (err) ->
+				console.log err
+			)
+	).pipe (
+		fs.createWriteStream num + ".jpeg"
+	)
 
 app.get '/cats/:width/:height/bw', (req, res) ->
 	resizeAndMore pickImage(), req.params.width, req.params.height, res
