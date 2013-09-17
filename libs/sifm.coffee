@@ -1,3 +1,4 @@
+redis = require 'redis'
 fs = require 'fs'
 express = require 'express'
 request = require 'request'
@@ -6,6 +7,7 @@ gm = require 'gm'
 uuid = require 'node-uuid'
 
 app = express()
+client = redis.createClient()
 
 ipsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum ipsum a lobortis accumsan. Maecenas eleifend tempor tempus. Duis id tellus id metus ullamcorper mollis. Quisque eget tortor porta, laoreet augue et, ultrices nunc. Phasellus lectus massa, vehicula vitae eleifend viverra, volutpat sit amet dolor. Quisque massa leo, vehicula in purus vitae, auctor iaculis nibh. Fusce eget laoreet erat. Donec nibh purus, ultricies a lacus eget, viverra aliquet nulla. Cras dapibus cursus lectus, nec aliquam urna accumsan quis. Donec molestie hendrerit tristique. Aenean feugiat lacus lectus, lobortis consectetur purus gravida quis.
 Praesent vitae ullamcorper felis. Suspendisse feugiat nibh at turpis ultricies scelerisque. Cras viverra cursus nisi, sit amet pretium arcu tristique eget. Mauris a nisl et mauris fringilla hendrerit sit amet in justo. Nunc porta, tellus sit amet blandit blandit, metus sapien tempus nibh, vitae iaculis nisl nisl ultrices enim. Curabitur ac vestibulum purus. Donec varius a urna vitae rutrum. Praesent vitae est in tortor condimentum suscipit. Nullam tempus congue venenatis. Pellentesque eu sollicitudin nibh, ac iaculis justo. Nulla gravida gravida gravida. Sed quis consequat quam.
@@ -81,8 +83,22 @@ pickImage = ->
 
 app.get '/cats', (req, res) ->
 	res.contentType = 'image/jpeg';
-	image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + pickImage() + ".jpeg"
-	request(image).pipe(res)
+
+	client.get( 'cats', (err, result) ->
+		if err | !result
+			image = "http://s3-us-west-2.amazonaws.com/sayitforme/cats/" + pickImage() + ".jpeg"
+			local = "/tmp/" + uuid.v1() + ".jpeg"
+			request(image, (err, response, body) ->
+				client.setex 'cats', 21600, body
+				rs = fs.createReadStream local
+				rs.on 'open', () ->
+					rs.pipe res
+			).pipe (
+				fs.createWriteStream local
+			)
+		else
+			res.send new Buffer(result, 'base64')
+	)
 
 app.get '/cats/bw', (req, res) ->
 	res.contentType = 'image/jpeg';
