@@ -12,6 +12,7 @@
     "graphicsmagick": "0.0.1",
     "gm": "~1.13.1",
     "node-uuid": "~1.4.1",
-    "redis": "~0.8.4"
+    "redis": "~0.8.4",
+    "lorem-ipsum": "~0.1.1"
   }
 }

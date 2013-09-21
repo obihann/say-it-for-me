@@ -1,2 +1,2 @@
 var coffee = require("coffee-script");
-require("./libs/sifm.coffee");
+require("../libs/sifm.coffee");
