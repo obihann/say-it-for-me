@@ -1,7 +1,14 @@
 {
   "name": "say-it-for-me",
   "description": "Do you need dummy text or images for your site? Well We got exactly that. ",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "main": "bin/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "https://github.com/obihann/Say-It-For-Me",
+  "authors": "Jeff Hann",
+  "license": "GPL v2",
   "private": false,
   "dependencies": {
     "express": "3.x",
