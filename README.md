@@ -28,8 +28,12 @@ OK I want it small, but also black and white...
 		http://localhost:3000/cats/300/400/bw
 
 ##ToDo
-* Finish the README.md file
 * Add more image types
-* Add formatting options for text
 * Add more text alternatives
+* Add formatting options for text
 * Speed up image editing
+
+##License
+[GNU General Public License v2](http://www.gnu.org/licenses/gpl-2.0.html).
+
+Copyright [Jeffrey Hann](http://jeffreyhann.ca/) 2013
