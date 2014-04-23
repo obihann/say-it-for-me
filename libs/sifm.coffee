@@ -46,4 +46,5 @@ app.get '/cats/:width/:height/bw', (req, res) ->
 	sifm.catsizebw req.params.width, req.params.height, (img) ->
 		res.sendfile img
 
-app.listen 3000
+port = process.env.PORT || 3000
+app.listen port
