@@ -1,6 +1,6 @@
 _ = require 'underscore'
 loremIpsum = require 'lorem-ipsum'
-dictionary = require './dictionary.coffee'
+dictionary = require './dictionary.js'
 
 class SIFMText
 	farm = dictionary

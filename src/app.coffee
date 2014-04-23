@@ -1,6 +1,6 @@
 express = require 'express'
-SIFMText = require './SIFMText.coffee'
-SIFMImg = require './SIFMImg.coffee'
+SIFMText = require './SIFMText.js'
+SIFMImg = require './SIFMImg.js'
 
 app = express()
 
@@ -47,4 +47,5 @@ app.get '/cats/:width/:height/bw', (req, res) ->
 		res.sendfile img
 
 port = process.env.PORT || 3000
-app.listen port
+app.listen port, () ->
+    console.log('Listening on ' + port)
