@@ -1,6 +1,7 @@
 fs = require 'fs'
 request = require 'request'
 gm = require 'gm'
+imageMagick = gm.subClass { imageMagick: true }
 uuid = require 'node-uuid'
 AWS = require 'aws-sdk'
 AWS.config.update
@@ -37,7 +38,7 @@ class SIFMImg
 
 		file.on 'close', () ->
 			rs = fs.createReadStream localImg
-			gm(rs, _imgNum + ".jpeg").type("Grayscale").write(localImg, (err) ->
+			imageMagick(rs, _imgNum + ".jpeg").type("Grayscale").write(localImg, (err) ->
 				console.log err if err
 
 				fs.readFile localImg, (lErr, lData) ->
@@ -93,7 +94,7 @@ class SIFMImg
 		request(img, (err, resp, body) ->
 			rs = fs.createReadStream localImg
 
-			gm(rs, @imgNum + ".jpeg").resize(width, height).write(localImg, (err) ->
+			imageMagick(rs, @imgNum + ".jpeg").resize(width, height).write(localImg, (err) ->
 				console.log err if err
 				cb localImg
 			)
@@ -109,7 +110,7 @@ class SIFMImg
 		request(img, (err, resp, body) ->
 			rs = fs.createReadStream localImg
 
-			gm(rs, @imgNum + ".jpeg").resize(width, height).type("Grayscale").write(localImg, (err) ->
+			imageMagick(rs, @imgNum + ".jpeg").resize(width, height).type("Grayscale").write(localImg, (err) ->
 				console.log err if err
 				cb localImg
 			)
