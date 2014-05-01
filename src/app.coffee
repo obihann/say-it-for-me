@@ -49,3 +49,5 @@ app.get '/cats/:width/:height/bw', (req, res) ->
 port = process.env.PORT || 3000
 app.listen port, () ->
     console.log('Listening on ' + port)
+
+module.exports = app
