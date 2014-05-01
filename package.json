@@ -6,7 +6,7 @@
   "scripts": {
       "test": "mocha"
   },
-  "repository": "https://github.com/obihann/Say-It-For-Me",
+  "repository": "https://github.com/obihann/say-it-for-me",
   "authors": "Jeff Hann",
   "license": "GPL v2",
   "private": false,
